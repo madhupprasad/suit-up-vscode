@@ -26,6 +26,9 @@ function activate(context) {
 		// vscode.window.showInformationMessage('Hello World from SuitUp!');
 
 		function matchWords(subject, words) {
+
+			const temp = JSON.parse(JSON.stringify(words));
+
 			var regexMetachars = /[(){[*+?.\\^$|]/g;
 
 			for (var i = 0; i < words.length; i++) {
@@ -33,8 +36,22 @@ function activate(context) {
 			}
 		
 			var regex = new RegExp("\\b(?:" + words.join("|") + ")\\b", "gi");
-		
-			return subject.match(regex) || ["Nothing"];
+
+			const result = subject.match(regex) || ["NONE"];
+			let dummy = []
+
+			console.log(result,temp);
+
+			temp.forEach(element => {
+				if (result.includes(element)){
+					dummy.push(1)
+				}else{
+					dummy.push(0)
+				}
+			});
+
+			console.log(dummy)
+			return [result, temp];
 		}
 
 		const getAllFiles = function(dirPath, arrayOfFiles) {
@@ -70,7 +87,7 @@ function activate(context) {
 
 		vscode.window.showOpenDialog({canSelectFolders:true}).then(res1 =>  
 			{
-				const assetFiles = getAllFiles(res1[0].fsPath,[])
+				let assetFiles = getAllFiles(res1[0].fsPath,[])
 				
 				vscode.window.showOpenDialog({canSelectFolders:true}).then(res2 =>  {
 
@@ -79,7 +96,9 @@ function activate(context) {
 						files.forEach(file => {
 							fs.readFile(file, 'utf8' , (err, data) => {
 								if (err) console.error(err)
-								console.log(file + " has " + matchWords(data, assetFiles));
+								let [result, copy] =  matchWords(data, assetFiles)
+								assetFiles = copy;
+								console.log(file + " has " + result);
 							  })
 						})
 				})
