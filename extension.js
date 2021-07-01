@@ -51,7 +51,7 @@ function activate(context) {
 			});
 
 			console.log(dummy)
-			return [result, temp];
+			return [result, temp, dummy];
 		}
 
 		const getAllFiles = function(dirPath, arrayOfFiles) {
@@ -88,19 +88,21 @@ function activate(context) {
 		vscode.window.showOpenDialog({canSelectFolders:true}).then(res1 =>  
 			{
 				let assetFiles = getAllFiles(res1[0].fsPath,[])
-				
+				let totalC = new Array(assetFiles.length).fill(0);
 				vscode.window.showOpenDialog({canSelectFolders:true}).then(res2 =>  {
 
 					const files = getAllFilesPath(res2[0].fsPath,[])
 
 						files.forEach(file => {
-							fs.readFile(file, 'utf8' , (err, data) => {
-								if (err) console.error(err)
-								let [result, copy] =  matchWords(data, assetFiles)
-								assetFiles = copy;
-								console.log(file + " has " + result);
-							  })
+							let data = fs.readFileSync(file, 'utf8');
+							let [result, copy, total] =  matchWords(data, assetFiles)
+							assetFiles = copy;
+							console.log(file + " has " + result);
+							totalC = totalC.map(function (num, idx) {
+								return num + total[idx];
+							});
 						})
+						console.log(totalC);
 				})
 			}
 			)
