@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const fs = require('fs');
+const path = require("path")
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -36,26 +37,52 @@ function activate(context) {
 			return subject.match(regex) || ["Nothing"];
 		}
 
+		const getAllFiles = function(dirPath, arrayOfFiles) {
+			let files = fs.readdirSync(dirPath)
+		  
+			arrayOfFiles = arrayOfFiles || []
+		  
+			files.forEach(function(file) {
+			  if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+				arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
+			  } else {
+				// arrayOfFiles.push(path.join(__dirname, dirPath, "/", file))
+				arrayOfFiles.push(path.join(file));
+			  }
+			})
+			return arrayOfFiles
+		  }
+
+		  const getAllFilesPath = function(dirPath, arrayOfFiles) {
+			let files = fs.readdirSync(dirPath)
+		  
+			arrayOfFiles = arrayOfFiles || []
+		  
+			files.forEach(function(file) {
+			  if (fs.statSync(dirPath + "/" + file).isDirectory()) {
+				arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
+			  } else {
+				arrayOfFiles.push(path.join(dirPath, "\\", file))
+			  }
+			})
+			return arrayOfFiles
+		  }
+
 		vscode.window.showOpenDialog({canSelectFolders:true}).then(res1 =>  
 			{
-			//read the source directory
-			fs.readdir(res1[0].fsPath, (err, assetFiles) => {
+				const assetFiles = getAllFiles(res1[0].fsPath,[])
+				
 				vscode.window.showOpenDialog({canSelectFolders:true}).then(res2 =>  {
-					//read the target dir
-					fs.readdir(res2[0].fsPath, (err, files2) => {
-						// Looping through the files
-						files2.forEach(file2 => {
-							const uri = res2[0].fsPath + '\\' + file2;
-							fs.readFile(uri, 'utf8' , (err, data) => {
+
+					const files = getAllFilesPath(res2[0].fsPath,[])
+
+						files.forEach(file => {
+							fs.readFile(file, 'utf8' , (err, data) => {
 								if (err) console.error(err)
-								console.log(file2 + " has " + matchWords(data.toString(), assetFiles));
+								console.log(file + " has " + matchWords(data, assetFiles));
 							  })
 						})
-						// console.log(totalCount);
-					})
-					
 				})
-			  })
 			}
 			)
 	});
