@@ -40,7 +40,7 @@ function activate(context) {
 			const result = subject.match(regex) || ["NONE"];
 			let dummy = []
 
-			console.log(result,temp);
+			// console.log(result,temp);
 
 			temp.forEach(element => {
 				if (result.includes(element)){
@@ -50,7 +50,7 @@ function activate(context) {
 				}
 			});
 
-			console.log(dummy)
+			// console.log(dummy)
 			return [result, temp, dummy];
 		}
 
@@ -77,9 +77,9 @@ function activate(context) {
 		  
 			files.forEach(function(file) {
 			  if (fs.statSync(dirPath + "/" + file).isDirectory()) {
-				arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
+				arrayOfFiles = getAllFilesPath(dirPath + "/" + file, arrayOfFiles)
 			  } else {
-				arrayOfFiles.push(path.join(dirPath, "\\", file))
+				arrayOfFiles.push(path.join(dirPath, "/", file))
 			  }
 			})
 			return arrayOfFiles
@@ -89,20 +89,34 @@ function activate(context) {
 			{
 				let assetFiles = getAllFiles(res1[0].fsPath,[])
 				let totalC = new Array(assetFiles.length).fill(0);
-				vscode.window.showOpenDialog({canSelectFolders:true}).then(res2 =>  {
-
-					const files = getAllFilesPath(res2[0].fsPath,[])
-
+				let result = {}
+				vscode.window.showOpenDialog({canSelectFolders:true, canSelectMany:true}).then(res2 =>  {
+					
+					res2.forEach(folder => {
+						console.log(folder);
+						const files = getAllFilesPath(folder.fsPath,[])
 						files.forEach(file => {
 							let data = fs.readFileSync(file, 'utf8');
 							let [result, copy, total] =  matchWords(data, assetFiles)
 							assetFiles = copy;
-							console.log(file + " has " + result);
+							// console.log(file + " has " + result);
 							totalC = totalC.map(function (num, idx) {
 								return num + total[idx];
 							});
 						})
-						console.log(totalC);
+						assetFiles.forEach((key,i) => {
+							result[key] = totalC[i]
+						});
+					})
+					console.table(result);
+					const data = JSON.stringify(result);
+					const output = path.join(__dirname, "/data.json", )
+					fs.writeFile(output, data, (err) => {
+						if (err) {
+							throw err;
+						}
+						console.log('Result saved in data.json')
+					});
 				})
 			}
 			)
