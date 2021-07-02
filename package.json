@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:SU.helloWorld"
+		"onCommand:SU.suitup"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "SU.helloWorld",
-				"title": "Hello World"
+				"command": "SU.suitup",
+				"title": "SUIT UP"
 			}
 		]
 	},
