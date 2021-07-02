@@ -110,7 +110,7 @@ function activate(context) {
 					})
 					console.table(result);
 					const data = JSON.stringify(result);
-					const output = path.join(__dirname, "/data.json", )
+					const output = path.join(__dirname, "/assets_info.json", )
 					fs.writeFile(output, data, (err) => {
 						if (err) {
 							throw err;
