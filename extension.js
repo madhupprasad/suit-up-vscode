@@ -38,10 +38,8 @@ function activate(context) {
 			var regex = new RegExp("\\b(?:" + words.join("|") + ")\\b", "gi");
 
 			const result = subject.match(regex) || ["NONE"];
+
 			let dummy = []
-
-			// console.log(result,temp);
-
 			temp.forEach(element => {
 				if (result.includes(element)){
 					dummy.push(1)
@@ -49,8 +47,6 @@ function activate(context) {
 					dummy.push(0)
 				}
 			});
-
-			// console.log(dummy)
 			return [result, temp, dummy];
 		}
 
@@ -63,8 +59,11 @@ function activate(context) {
 			  if (fs.statSync(dirPath + "/" + file).isDirectory()) {
 				arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
 			  } else {
-				// arrayOfFiles.push(path.join(__dirname, dirPath, "/", file))
-				arrayOfFiles.push(path.join(file));
+				// * leave if the image has @2x , @3x 
+				if(file.match(/@.x/g) == null){
+					arrayOfFiles.push(path.join(file));
+				}
+
 			  }
 			})
 			return arrayOfFiles
