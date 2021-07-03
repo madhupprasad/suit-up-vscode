@@ -45,7 +45,7 @@ function activate(context) {
 			return [matchedAssets, originalAssets, countArray];
 		}
 
-		const getAllFiles = (dirPath, arrayOfFiles) => {
+		const getAllFiles = (dirPath, arrayOfFiles, exclude = null) => {
 			let files;
 			try {
 				files = fs.readdirSync(dirPath)
@@ -56,10 +56,10 @@ function activate(context) {
 			arrayOfFiles = arrayOfFiles || []
 			files.forEach(function (file) {
 				if (fs.statSync(dirPath + "/" + file).isDirectory()) {
-					arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles)
+					arrayOfFiles = getAllFiles(dirPath + "/" + file, arrayOfFiles, exclude)
 				} else {
 					// * leave if the image has @2x , @3x 
-					if (file.match(/@.x/g) == null) {
+					if (file.match(exclude) == null) {
 						arrayOfFiles.push(path.join(file));
 					}
 				}
@@ -67,7 +67,7 @@ function activate(context) {
 			return arrayOfFiles
 		}
 
-		const getAllFilesPath = (dirPath, arrayOfFiles) => {
+		const getAllFilesPath = (dirPath, arrayOfFiles, exclude = null) => {
 			let files;
 			try {
 				files = fs.readdirSync(dirPath)
@@ -78,9 +78,9 @@ function activate(context) {
 			arrayOfFiles = arrayOfFiles || []
 			files.forEach(function (file) {
 				if (fs.statSync(dirPath + "/" + file).isDirectory()) {
-					arrayOfFiles = getAllFilesPath(dirPath + "/" + file, arrayOfFiles)
+					arrayOfFiles = getAllFilesPath(dirPath + "/" + file, arrayOfFiles, exclude)
 				} else {
-					if (file.match(/@.x/g) == null) {
+					if (file.match(exclude) == null) {
 						arrayOfFiles.push(path.join(dirPath, "/", file))
 					}
 				}
@@ -100,10 +100,10 @@ function activate(context) {
 			});
 		}
 
-		const optionalBackupAndDelete = (assetFiles ,assetFilesPath, finalCountArray) => {
+		const optionalBackupAndDelete = (assetFiles ,assetFilesPath, finalCountArray, inputRE) => {
 			vscode.window.showInformationMessage("Do you want to delete all the unused files?", "Yes", "No").then(answer =>{
 				if (answer === "Yes"){
-					let assetFilesPathArray = getAllFilesPath(assetFilesPath, [])
+					let assetFilesPathArray = getAllFilesPath(assetFilesPath, [], inputRE)
 
 					const backupDir = path.join(__dirname, "/backup/")
 
@@ -127,46 +127,53 @@ function activate(context) {
 			})
 		}
 
+
+
+		// First Dialog
 		vscode.window.showOpenDialog({ canSelectFolders: true }).then(res1 => {
 
-			let assetFiles = getAllFiles(res1[0].fsPath, [])
+
+			vscode.window.showInputBox({placeHolder : "Regular Expression", prompt : "This is used to exclude the assets/files"}).then(input=> {
+
+
+			const inputRE = new RegExp(input , "g");
+				
+			let assetFiles = getAllFiles(res1[0].fsPath, [], inputRE);
+
 			let finalCountArray = new Array(assetFiles.length).fill(0);
 			let result = {}
-			let pathResult = {}
 
-			vscode.window.showOpenDialog({ canSelectFolders: true, canSelectMany: true }).then(res2 => {
+				vscode.window.showOpenDialog({ canSelectFolders: true, canSelectMany: true }).then(res2 => {
+	
+					res2.forEach(folder => {
 
-				res2.forEach(folder => {
+						const files = getAllFilesPath(folder.fsPath, [], inputRE)
+						files.forEach(file => {
+							let data;
+							try {
+								data = fs.readFileSync(file, 'utf8');
+							} catch (err) {
+								console.log(err);
+							}
+							let [matchedAssets, originalAssets, countArray] = matchWords(data, assetFiles)
+							assetFiles = originalAssets;
 
-					const files = getAllFilesPath(folder.fsPath, [])
-					files.forEach(file => {
-						let data;
-						try {
-							data = fs.readFileSync(file, 'utf8');
-						} catch (err) {
-							console.log(err);
-						}
-						let [matchedAssets, originalAssets, countArray] = matchWords(data, assetFiles)
-						assetFiles = originalAssets;
-
-						finalCountArray = finalCountArray.map(function (num, idx) {
-							return num + countArray[idx];
+							finalCountArray = finalCountArray.map(function (num, idx) {
+								return num + countArray[idx];
+							});
+						})
+						assetFiles.forEach((key, i) => {
+							result[key] = finalCountArray[i]
 						});
 					})
-					assetFiles.forEach((key, i) => {
-						result[key] = finalCountArray[i]
-					});
 
+					saveAndPrint(result);
+
+					optionalBackupAndDelete(assetFiles ,res1[0].fsPath, finalCountArray, inputRE);
 
 				})
-
-				saveAndPrint(result);
-
-				optionalBackupAndDelete(assetFiles ,res1[0].fsPath, finalCountArray);
-
 			})
-		}
-		)
+		})
 	});
 
 	context.subscriptions.push(disposable);
