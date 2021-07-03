@@ -135,9 +135,12 @@ function activate(context) {
 
 			vscode.window.showInputBox({placeHolder : "Regular Expression", prompt : "This is used to exclude the assets/files"}).then(input=> {
 
+			let inputRE = null;
 
-			const inputRE = new RegExp(input , "g");
-				
+			if (input != null){
+				inputRE = new RegExp(input , "g");
+			}
+
 			let assetFiles = getAllFiles(res1[0].fsPath, [], inputRE);
 
 			let finalCountArray = new Array(assetFiles.length).fill(0);
