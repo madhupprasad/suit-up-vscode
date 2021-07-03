@@ -10,7 +10,3 @@
 1. It takes all the names of files(say header.png) from the first folder (recursively all files inside it)
 2. Then I search for the file name in the source folder files recursively ( require(../../header.png) => its a hit ) in a brutal brute force algorithm 😆.
 3. Then I save and print the result in a file as json (assets_info.json).
-
-## first column is asset name , second column is no. of files in which the asset is used.
-
-![image](https://user-images.githubusercontent.com/38370391/124269295-55eafa80-db58-11eb-8c75-ba9e2da75301.png)
