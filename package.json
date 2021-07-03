@@ -3,8 +3,13 @@
 	"displayName": "SuitUp",
 	"description": "",
 	"version": "0.0.1",
+	"publisher": "madhu",
 	"engines": {
 		"vscode": "^1.57.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/madhupprasad/suit-up-vscode.git"
 	},
 	"categories": [
 		"Other"

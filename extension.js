@@ -3,6 +3,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require("path");
+const { dir } = require('console');
 
 
 // this method is called when your extension is activated
@@ -87,11 +88,14 @@ function activate(context) {
 			})
 			return arrayOfFiles
 		}
-
-		const saveAndPrint = (result) => {
+		/**
+		 * @param  {} result
+		 * @param  {} dirname
+		 */
+		const saveAndPrint = (result, dirname) => {
 			console.table(result);
 			const data = JSON.stringify(result);
-			const output = path.join(__dirname, "/assets_info.json",)
+			const output = path.join(dirname, "/assets_info.json",)
 			fs.writeFile(output, data, (err) => {
 				if (err) {
 					throw err;
@@ -99,13 +103,19 @@ function activate(context) {
 				console.log('Result saved in data.json');
 			});
 		}
-
-		const optionalBackupAndDelete = (assetFiles ,assetFilesPath, finalCountArray, inputRE) => {
+		/**
+		 * @param  {} assetFiles
+		 * @param  {} assetFilesPath
+		 * @param  {} finalCountArray
+		 * @param  {} inputRE
+		 * @param  {} dirname
+		 */
+		const optionalBackupAndDelete = (assetFiles ,assetFilesPath, finalCountArray, inputRE, dirname) => {
 			vscode.window.showInformationMessage("Do you want to delete all the unused files?", "Yes", "No").then(answer =>{
 				if (answer === "Yes"){
 					let assetFilesPathArray = getAllFilesPath(assetFilesPath, [], inputRE)
 
-					const backupDir = path.join(__dirname, "/backup/")
+					const backupDir = path.join(dirname, "/backup/")
 
 					if (!fs.existsSync(backupDir)){
 						fs.mkdirSync(backupDir);
@@ -130,7 +140,7 @@ function activate(context) {
 
 
 		// First Dialog
-		vscode.window.showOpenDialog({ canSelectFolders: true }).then(res1 => {
+		vscode.window.showOpenDialog({ canSelectFolders: true, title: "SELECT THE ASSETS FOLDER" }).then(res1 => {
 
 
 			vscode.window.showInputBox({placeHolder : "Regular Expression", prompt : "This is used to exclude the assets/files"}).then(input=> {
@@ -146,7 +156,7 @@ function activate(context) {
 			let finalCountArray = new Array(assetFiles.length).fill(0);
 			let result = {}
 
-				vscode.window.showOpenDialog({ canSelectFolders: true, canSelectMany: true }).then(res2 => {
+				vscode.window.showOpenDialog({ canSelectFolders: true, canSelectMany: true, title:"SELECT THE SOURCE FOLDERS" }).then(res2 => {
 	
 					res2.forEach(folder => {
 
@@ -170,9 +180,15 @@ function activate(context) {
 						});
 					})
 
-					saveAndPrint(result);
+					vscode.window.showOpenDialog({ canSelectFolders: true, title: "TARGET FOLDER TO SAVE OUTPUT FILES"}).then(res3 => {
 
-					optionalBackupAndDelete(assetFiles ,res1[0].fsPath, finalCountArray, inputRE);
+						const dirname = res3[0].fsPath; 
+
+						saveAndPrint(result, dirname);
+						optionalBackupAndDelete(assetFiles ,res1[0].fsPath, finalCountArray, inputRE, dirname);
+					})
+
+					
 
 				})
 			})
